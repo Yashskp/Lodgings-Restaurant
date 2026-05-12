@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up | Lodgings & Restaurant Management</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="auth-shell">
+    <section class="brand-panel">
+        <div class="brand-mark" aria-hidden="true">LR</div>
+        <p class="eyebrow">Guest Registration</p>
+        <h1>Create your hospitality account</h1>
+        <p>Register once to book rooms, reserve tables, order food, make payments, and view your booking history.</p>
+
+        <div class="feature-strip" aria-label="Customer services">
+            <span>Room Booking</span>
+            <span>Table Reservation</span>
+            <span>Food Orders</span>
+            <span>Payments</span>
+        </div>
+    </section>
+
+    <section class="auth-card" aria-labelledby="signup-title">
+        <div class="auth-heading">
+            <p class="eyebrow">New Account</p>
+            <h2 id="signup-title">Create account</h2>
+            <p class="muted">Start with a secure customer profile.</p>
+        </div>
+
+        <form th:action="@{/signup}" th:object="${signupForm}" method="post" class="auth-form">
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+            <label for="fullName">Full name</label>
+            <input id="fullName" th:field="*{fullName}" type="text" autocomplete="name" required autofocus>
+            <p class="field-error" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}"></p>
+
+            <label for="email">Email address</label>
+            <input id="email" th:field="*{email}" type="email" autocomplete="email" required>
+            <p class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+
+            <label for="password">Password</label>
+            <input id="password" th:field="*{password}" type="password" autocomplete="new-password" required minlength="6">
+            <p class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></p>
+
+            <button type="submit">Create account</button>
+        </form>
+
+        <p class="switch-link">Already registered? <a th:href="@{/login}">Login</a></p>
+    </section>
+</main>
+</body>
+</html>

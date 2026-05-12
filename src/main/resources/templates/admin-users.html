@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management | Lodgings & Restaurant Management</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="dashboard">
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">Admin Control</p>
+            <h1>User Management</h1>
+            <p class="muted">Read, edit, delete users and assign system roles.</p>
+        </div>
+        <div class="header-actions">
+            <a class="text-button" th:href="@{/dashboard}">Dashboard</a>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="secondary-button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <div class="alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <section class="table-panel">
+        <div class="table-header">
+            <div>
+                <h2>Registered Users</h2>
+                <p class="muted">Accounts are loaded from the MySQL `users` table.</p>
+            </div>
+            <strong th:text="${#lists.size(users)} + ' users'">0 users</strong>
+        </div>
+
+        <div class="responsive-table">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="user : ${users}">
+                    <td th:text="${user.id}">1</td>
+                    <td th:text="${user.fullName}">System Administrator</td>
+                    <td th:text="${user.email}">admin@lodgings.com</td>
+                    <td>
+                        <form class="inline-form" th:action="@{/admin/users/{id}/role(id=${user.id})}" method="post">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                            <select name="role" aria-label="User role">
+                                <option th:each="role : ${roles}"
+                                        th:value="${role}"
+                                        th:text="${role}"
+                                        th:selected="${role == user.role}">
+                                    CUSTOMER
+                                </option>
+                            </select>
+                            <button class="small-button" type="submit">Save</button>
+                        </form>
+                    </td>
+                    <td th:text="${#temporals.format(user.createdAt, 'dd MMM yyyy')}">12 May 2026</td>
+                    <td>
+                        <div class="row-actions">
+                            <a class="small-link" th:href="@{/admin/users/{id}/edit(id=${user.id})}">Edit</a>
+                            <form th:action="@{/admin/users/{id}/delete(id=${user.id})}" method="post">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button class="danger-button" type="submit"
+                                        th:disabled="${user.email.equalsIgnoreCase(currentEmail)}">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+</main>
+</body>
+</html>

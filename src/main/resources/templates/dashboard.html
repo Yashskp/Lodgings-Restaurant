@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Lodgings & Restaurant Management</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="dashboard">
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">Operations Dashboard</p>
+            <h1>Hospitality Dashboard</h1>
+            <p class="muted">
+                <span th:text="${email}"></span>
+                <span th:if="${role}" th:text="' | ' + ${role}"></span>
+            </p>
+        </div>
+        <div class="header-actions">
+            <a class="text-button" th:if="${role != null and role.name() == 'ADMIN'}" th:href="@{/admin/users}">Users</a>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="secondary-button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <section class="stats-grid" aria-label="Today overview">
+        <article>
+            <span>Occupancy</span>
+            <strong>74%</strong>
+            <p>Rooms active today</p>
+        </article>
+        <article>
+            <span>Reservations</span>
+            <strong>32</strong>
+            <p>Expected arrivals</p>
+        </article>
+        <article>
+            <span>Restaurant</span>
+            <strong>18</strong>
+            <p>Open food orders</p>
+        </article>
+        <article>
+            <span>Revenue</span>
+            <strong>86K</strong>
+            <p>Recorded today</p>
+        </article>
+    </section>
+
+    <section class="module-grid">
+        <article>
+            <span class="module-icon">01</span>
+            <h2>Room Bookings</h2>
+            <p>Manage availability, reservations, check-in, and checkout workflows.</p>
+        </article>
+        <article>
+            <span class="module-icon">02</span>
+            <h2>Restaurant Orders</h2>
+            <p>Track table reservations, kitchen order status, billing, and takeaway service.</p>
+        </article>
+        <article>
+            <span class="module-icon">03</span>
+            <h2>Inventory</h2>
+            <p>Monitor stock updates, suppliers, expiry dates, and low-stock alerts.</p>
+        </article>
+        <article>
+            <span class="module-icon">04</span>
+            <h2>Reports</h2>
+            <p>Review revenue, occupancy, restaurant sales, and staff performance.</p>
+        </article>
+    </section>
+</main>
+</body>
+</html>
