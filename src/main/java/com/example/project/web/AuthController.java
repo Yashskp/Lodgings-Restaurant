@@ -3,6 +3,7 @@ package com.example.project.web;
 import com.example.project.auth.AppUser;
 import com.example.project.auth.AppUserRepository;
 import com.example.project.auth.SignupForm;
+import com.example.project.auth.UserRole;
 import jakarta.validation.Valid;
 import java.util.Locale;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -62,9 +63,16 @@ public class AuthController {
         user.setFullName(signupForm.getFullName().trim());
         user.setEmail(email);
         user.setPassword(passwordEncoder.encode(signupForm.getPassword()));
+        if (isAdminEmail(email)) {
+            user.setRole(UserRole.ADMIN);
+        }
         userRepository.save(user);
 
         redirectAttributes.addFlashAttribute("signupSuccess", "Account created. Please login.");
         return "redirect:/login";
+    }
+
+    private boolean isAdminEmail(String email) {
+        return email.toLowerCase(Locale.ROOT).contains("admin");
     }
 }

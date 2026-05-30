@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Submission</title>
+    <style>
+        body { color: #172026; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; margin: 36px; }
+        h1 { font-size: 30px; margin-bottom: 8px; }
+        h2 { border-bottom: 1px solid #d8e1e6; font-size: 21px; margin-top: 28px; padding-bottom: 6px; }
+        code { background: #eef4f3; padding: 2px 5px; }
+        img { border: 1px solid #d8e1e6; max-width: 100%; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #d8e1e6; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #eef4f3; }
+    </style>
+</head>
+<body>
+<h1>Dashboard Implementation Documentation</h1>
+<p><strong>Application:</strong> Lodgings and Restaurant Management</p>
+<p><strong>Feature:</strong> Admin analytics dashboard for stored partner API and partner service data.</p>
+
+<h2>Dashboard Screenshot</h2>
+<p>The dashboard is available to admin users at <code>/api-dashboard</code>. The screenshot below shows the implemented layout with representative stored data.</p>
+<img src="dashboard-screenshot.png" alt="Integration analytics dashboard screenshot">
+
+<h2>Purpose</h2>
+<p>The dashboard helps administrators understand how third-party integrations are using the application and what partner-visible services are currently stored. It analyzes data already persisted in the application's database rather than relying on hard-coded values.</p>
+
+<h2>Displayed Analysis</h2>
+<table>
+    <tr><th>Dashboard Area</th><th>Data Source</th><th>Explanation</th></tr>
+    <tr><td>API overview cards</td><td><code>api_usage_logs</code></td><td>Total calls, successful calls, failed calls, and success rate are calculated from stored API log rows.</td></tr>
+    <tr><td>Stored service overview</td><td><code>partner_services</code></td><td>Shows active services, cancelled services, active lodging records, and active restaurant records.</td></tr>
+    <tr><td>24 hour health</td><td><code>api_usage_logs.requested_at</code></td><td>Counts recent traffic and failures during the last 24 hours.</td></tr>
+    <tr><td>Endpoint usage</td><td><code>api_usage_logs.endpoint</code>, <code>method</code>, <code>successful</code></td><td>Groups API requests by endpoint and HTTP method.</td></tr>
+    <tr><td>Partner usage</td><td><code>api_usage_logs.partner_name</code></td><td>Groups traffic by partner and renders a success-rate bar.</td></tr>
+    <tr><td>Service mix</td><td><code>partner_services.service_type</code>, <code>price</code></td><td>Groups active services by type and calculates average price.</td></tr>
+    <tr><td>Recent services and requests</td><td><code>partner_services</code>, <code>api_usage_logs</code></td><td>Shows the latest stored records for operational review.</td></tr>
+</table>
+
+<h2>Implementation Details</h2>
+<p>The dashboard route is implemented in <code>ApiDashboardController</code>. It queries repositories, computes success-rate percentages, and places the resulting values into the Thymeleaf model.</p>
+<p>The repository layer was extended with aggregate methods and JPQL projection queries:</p>
+<ul>
+    <li><code>ApiUsageLogRepository</code>: total, 24-hour counts, endpoint summaries, and partner summaries.</li>
+    <li><code>PartnerServiceRepository</code>: active/cancelled counts, service type counts, recent services, and active service type price summary.</li>
+    <li><code>EndpointUsageSummary</code>, <code>PartnerUsageSummary</code>, and <code>ServiceTypeSummary</code>: typed projection records for dashboard data.</li>
+</ul>
+<p>The UI is implemented in <code>src/main/resources/templates/api-dashboard.html</code> and styled through <code>src/main/resources/static/css/auth.css</code>. The page uses responsive grids, summary cards, tables, and bar indicators so it remains usable on desktop and mobile screens.</p>
+
+<h2>Access Control</h2>
+<p>The dashboard is protected in <code>SecurityConfig</code> with <code>.requestMatchers("/api-dashboard").hasRole("ADMIN")</code>. Normal users can continue to use the general dashboard, while only admins can view integration analytics.</p>
+
+<h2>Verification</h2>
+<p>The project test suite was run with <code>./gradlew.bat test</code> and completed successfully after implementation.</p>
+</body>
+</html>

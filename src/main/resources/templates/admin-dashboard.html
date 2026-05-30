@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Lodgings & Restaurant Management</title>
+    <link rel="stylesheet" th:href="@{/css/auth.css}">
+</head>
+<body>
+<main class="dashboard admin-dashboard">
+    <header class="dashboard-header">
+        <div>
+            <p class="eyebrow">Admin Control Center</p>
+            <h1>Admin Dashboard</h1>
+            <p class="muted">Signed in as <span th:text="${email}">admin@lodgings.com</span></p>
+        </div>
+        <div class="header-actions">
+            <a class="text-button" th:href="@{/user}">User Page</a>
+            <a class="text-button" th:href="@{/admin/users}">Users</a>
+            <a class="text-button" th:href="@{/api-dashboard}">Analytics</a>
+            <form th:action="@{/logout}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <button class="secondary-button" type="submit">Logout</button>
+            </form>
+        </div>
+    </header>
+
+    <section class="stats-grid" aria-label="Admin overview">
+        <article>
+            <span>Total Users</span>
+            <strong th:text="${totalUsers}">0</strong>
+            <p th:text="${adminUsers + ' admin, ' + customerUsers + ' customer'}">0 admin, 0 customer</p>
+        </article>
+        <article>
+            <span>Total Rooms</span>
+            <strong th:text="${totalRooms}">0</strong>
+            <p th:text="${availableRooms + ' available, ' + bookedRooms + ' booked'}">0 available, 0 booked</p>
+        </article>
+        <article>
+            <span>Cleaning Staff</span>
+            <strong th:text="${cleaningStaff}">0</strong>
+            <p>Housekeeping records saved</p>
+        </article>
+        <article>
+            <span>Menu Items</span>
+            <strong th:text="${menuItems}">0</strong>
+            <p>Breakfast, lunch and dinner dishes</p>
+        </article>
+    </section>
+
+    <section class="admin-action-grid dashboard-section" aria-label="Admin actions">
+        <a class="admin-action" th:href="@{/admin/users}">
+            <span class="module-icon">01</span>
+            <h2>Manage Users</h2>
+            <p>Edit user names, emails, roles, and delete customer accounts.</p>
+        </a>
+        <a class="admin-action" th:href="@{/user}">
+            <span class="module-icon">02</span>
+            <h2>Manage Hotel Details</h2>
+            <p>Add rooms, cleaning staff, and food menu items into the database.</p>
+        </a>
+        <a class="admin-action" th:href="@{/api-dashboard}">
+            <span class="module-icon">03</span>
+            <h2>View Analytics</h2>
+            <p>Review partner API usage, services, logs, and AI insights.</p>
+        </a>
+    </section>
+
+    <section class="dashboard-section admin-overview-grid">
+        <div class="table-panel">
+            <div class="table-header">
+                <div>
+                    <h2>Recent Users</h2>
+                    <p class="muted">Latest accounts from the users table.</p>
+                </div>
+            </div>
+            <div class="responsive-table compact-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="user : ${recentUsers}">
+                        <td th:text="${user.fullName}">User</td>
+                        <td th:text="${user.email}">user@example.com</td>
+                        <td th:text="${user.role}">CUSTOMER</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-panel">
+            <div class="table-header">
+                <div>
+                    <h2>Room Snapshot</h2>
+                    <p class="muted">Rooms saved in the hotel room table.</p>
+                </div>
+            </div>
+            <div class="responsive-table compact-table">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Room</th>
+                        <th>Floor</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="room : ${recentRooms}">
+                        <td th:text="${room.number}">101</td>
+                        <td th:text="${room.floor}">1</td>
+                        <td th:text="${room.type + ' | ' + room.coolingLabel()}">Normal | AC</td>
+                        <td th:text="${room.statusLabel()}">Available</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+</body>
+</html>

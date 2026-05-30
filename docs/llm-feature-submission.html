@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Groq LLM Feature Submission</title>
+    <style>
+        body { color: #172026; font-family: Arial, Helvetica, sans-serif; line-height: 1.55; margin: 36px; }
+        h1 { font-size: 30px; margin-bottom: 8px; }
+        h2 { border-bottom: 1px solid #d8e1e6; font-size: 21px; margin-top: 28px; padding-bottom: 6px; }
+        code { background: #eef4f3; padding: 2px 5px; }
+        pre { background: #eef4f3; padding: 12px; white-space: pre-wrap; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #d8e1e6; padding: 8px; text-align: left; vertical-align: top; }
+        th { background: #eef4f3; }
+    </style>
+</head>
+<body>
+<h1>Groq LLM Feature Documentation</h1>
+<p><strong>Feature:</strong> AI Operations Insight for admins.</p>
+<p><strong>Provider:</strong> Groq Chat Completions API.</p>
+
+<h2>Use Case</h2>
+<p>Admins can click <code>Generate Insight</code> on the analytics dashboard. The application gathers current stored metrics from the database, sends those metrics to Groq, receives an operations summary, and stores the generated response for later viewing on the dashboard.</p>
+
+<h2>Groq API Integration</h2>
+<p>The integration uses Groq's OpenAI-compatible chat completions endpoint:</p>
+<pre>POST https://api.groq.com/openai/v1/chat/completions</pre>
+<p>The API key is read from the environment through <code>GROQ_API_KEY</code>. The default model is <code>llama-3.3-70b-versatile</code>, configurable through <code>GROQ_MODEL</code>. Groq's official documentation lists the OpenAI-compatible base URL and chat completions API, and its model documentation lists <code>llama-3.3-70b-versatile</code>.</p>
+
+<h2>Configuration</h2>
+<table>
+    <tr><th>Property</th><th>Environment Variable</th><th>Purpose</th></tr>
+    <tr><td><code>groq.api-key</code></td><td><code>GROQ_API_KEY</code></td><td>Secret token used in the <code>Authorization: Bearer</code> header.</td></tr>
+    <tr><td><code>groq.model</code></td><td><code>GROQ_MODEL</code></td><td>Model name sent in the Groq request. Default: <code>llama-3.3-70b-versatile</code>.</td></tr>
+    <tr><td><code>groq.base-url</code></td><td><code>GROQ_BASE_URL</code></td><td>Base URL for the OpenAI-compatible Groq API.</td></tr>
+</table>
+
+<h2>Code Structure</h2>
+<table>
+    <tr><th>File</th><th>Responsibility</th></tr>
+    <tr><td><code>GroqProperties.java</code></td><td>Maps Groq configuration from <code>application.properties</code>.</td></tr>
+    <tr><td><code>GroqInsightService.java</code></td><td>Builds the prompt from stored metrics, calls Groq, extracts the response, and saves the insight.</td></tr>
+    <tr><td><code>AiInsight.java</code></td><td>JPA entity for persisted AI insight text, model name, title, and timestamp.</td></tr>
+    <tr><td><code>AiInsightRepository.java</code></td><td>Loads recent generated insights for display.</td></tr>
+    <tr><td><code>ApiDashboardController.java</code></td><td>Provides the admin POST route <code>/api-dashboard/insights/generate</code>.</td></tr>
+    <tr><td><code>api-dashboard.html</code></td><td>Displays the Generate Insight button and recent AI outputs.</td></tr>
+</table>
+
+<h2>Prompt Design</h2>
+<p>The prompt intentionally sends structured numeric metrics only. It includes API totals, failed requests, 24-hour health, active and cancelled service counts, endpoint usage, partner usage, and active service type summary. The system message instructs the model to act as a concise hospitality operations analyst and to use only supplied application metrics.</p>
+<p>The user prompt asks Groq to return:</p>
+<ol>
+    <li>A three sentence executive summary.</li>
+    <li>Three specific observations.</li>
+    <li>Three recommended actions for the admin team.</li>
+</ol>
+
+<h2>Data Flow</h2>
+<ol>
+    <li>Admin opens <code>/api-dashboard</code>.</li>
+    <li>Admin clicks <code>Generate Insight</code>.</li>
+    <li>Spring Security validates the admin session and CSRF token.</li>
+    <li><code>ApiDashboardController</code> calls <code>GroqInsightService.generateOperationalInsight()</code>.</li>
+    <li>The service reads stored database metrics through JPA repositories.</li>
+    <li>The service sends a JSON request to Groq with model, temperature, max tokens, and messages.</li>
+    <li>The returned message content is saved into <code>ai_insights</code>.</li>
+    <li>The admin is redirected back to the dashboard where the new insight appears.</li>
+</ol>
+
+<h2>Error Handling</h2>
+<p>If <code>GROQ_API_KEY</code> is missing, the service throws a clear configuration error and the dashboard displays it as an admin-visible message. Runtime API errors are caught by the controller and returned as flash messages without breaking the dashboard page.</p>
+
+<h2>Security Notes</h2>
+<p>The Groq API key is never committed to source control. It is provided through environment variables. The LLM route is available only to admin users because it is under the existing admin-only dashboard flow.</p>
+
+<h2>Verification</h2>
+<p>The project test suite was run with <code>./gradlew.bat test</code> and completed successfully. The LLM call itself requires a real <code>GROQ_API_KEY</code> at runtime.</p>
+</body>
+</html>

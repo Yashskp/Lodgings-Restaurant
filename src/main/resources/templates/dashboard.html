@@ -7,18 +7,20 @@
     <link rel="stylesheet" th:href="@{/css/auth.css}">
 </head>
 <body>
-<main class="dashboard">
+<main class="dashboard hotel-dashboard">
     <header class="dashboard-header">
         <div>
-            <p class="eyebrow">Operations Dashboard</p>
-            <h1>Hospitality Dashboard</h1>
+            <p class="eyebrow">User Page</p>
+            <h1>Hotel Details Management</h1>
             <p class="muted">
                 <span th:text="${email}"></span>
                 <span th:if="${role}" th:text="' | ' + ${role}"></span>
             </p>
         </div>
         <div class="header-actions">
+            <a class="text-button" th:if="${role != null and role.name() == 'ADMIN'}" th:href="@{/admin}">Admin</a>
             <a class="text-button" th:if="${role != null and role.name() == 'ADMIN'}" th:href="@{/admin/users}">Users</a>
+            <a class="text-button" th:if="${role != null and role.name() == 'ADMIN'}" th:href="@{/api-dashboard}">Analytics</a>
             <form th:action="@{/logout}" method="post">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
                 <button class="secondary-button" type="submit">Logout</button>
@@ -26,50 +28,300 @@
         </div>
     </header>
 
-    <section class="stats-grid" aria-label="Today overview">
+    <div class="alert success" th:if="${successMessage}" th:text="${successMessage}"></div>
+    <div class="alert error" th:if="${errorMessage}" th:text="${errorMessage}"></div>
+
+    <section class="stats-grid" aria-label="Building overview">
         <article>
-            <span>Occupancy</span>
-            <strong>74%</strong>
-            <p>Rooms active today</p>
+            <span>Total Rooms</span>
+            <strong th:text="${totalRooms}">20</strong>
+            <p>Saved in the database</p>
         </article>
         <article>
-            <span>Reservations</span>
-            <strong>32</strong>
-            <p>Expected arrivals</p>
+            <span>Available</span>
+            <strong th:text="${availableRooms}">14</strong>
+            <p>Ready for guest booking</p>
         </article>
         <article>
-            <span>Restaurant</span>
-            <strong>18</strong>
-            <p>Open food orders</p>
+            <span>Booked</span>
+            <strong th:text="${occupiedRooms}">6</strong>
+            <p>Currently unavailable</p>
         </article>
         <article>
-            <span>Revenue</span>
-            <strong>86K</strong>
-            <p>Recorded today</p>
+            <span>Cleaning Staff</span>
+            <strong th:text="${#lists.size(cleaningStaff)}">5</strong>
+            <p>Assigned to room service</p>
         </article>
     </section>
 
-    <section class="module-grid">
-        <article>
-            <span class="module-icon">01</span>
-            <h2>Room Bookings</h2>
-            <p>Manage availability, reservations, check-in, and checkout workflows.</p>
-        </article>
-        <article>
-            <span class="module-icon">02</span>
-            <h2>Restaurant Orders</h2>
-            <p>Track table reservations, kitchen order status, billing, and takeaway service.</p>
-        </article>
-        <article>
-            <span class="module-icon">03</span>
-            <h2>Inventory</h2>
-            <p>Monitor stock updates, suppliers, expiry dates, and low-stock alerts.</p>
-        </article>
-        <article>
-            <span class="module-icon">04</span>
-            <h2>Reports</h2>
-            <p>Review revenue, occupancy, restaurant sales, and staff performance.</p>
-        </article>
+    <section class="management-panel dashboard-section" aria-labelledby="add-details-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Add Details</p>
+                <h2 id="add-details-title">Save hotel information</h2>
+                <p class="muted">New room, staff, and food menu details are stored in MySQL.</p>
+            </div>
+        </div>
+
+        <div class="entry-form-grid">
+            <form class="entry-form" th:action="@{/user/rooms}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <h3>Add room</h3>
+
+                <div class="form-field">
+                    <label for="newRoomNumber">Room number</label>
+                    <input id="newRoomNumber" name="number" type="number" min="1" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="newRoomFloor">Floor</label>
+                        <select id="newRoomFloor" name="floor" required>
+                            <option value="1">Floor 1</option>
+                            <option value="2">Floor 2</option>
+                            <option value="3">Floor 3</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="newRoomType">Type</label>
+                        <select id="newRoomType" name="type" required>
+                            <option th:each="type : ${roomTypes}" th:value="${type}" th:text="${type}">Normal</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="newRoomCooling">Cooling</label>
+                        <select id="newRoomCooling" name="cooling" required>
+                            <option th:each="option : ${coolingOptions}" th:value="${option}" th:text="${option}">AC</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="newRoomPrice">Price per night</label>
+                        <input id="newRoomPrice" name="price" type="number" min="1" required>
+                    </div>
+                </div>
+
+                <label class="check-field" for="newRoomAvailable">
+                    <input id="newRoomAvailable" name="available" type="checkbox" value="true" checked>
+                    Available for booking
+                </label>
+
+                <button type="submit">Save room</button>
+            </form>
+
+            <form class="entry-form" th:action="@{/user/staff}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <h3>Add cleaning staff</h3>
+
+                <div class="form-field">
+                    <label for="staffName">Staff name</label>
+                    <input id="staffName" name="name" type="text" maxlength="120" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-field">
+                        <label for="staffArea">Area</label>
+                        <input id="staffArea" name="area" type="text" placeholder="Floor 1" maxlength="80" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="staffShift">Shift</label>
+                        <input id="staffShift" name="shift" type="text" placeholder="Morning" maxlength="80" required>
+                    </div>
+                </div>
+
+                <button type="submit">Save staff</button>
+            </form>
+
+            <form class="entry-form wide-entry-form" th:action="@{/user/menu}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <h3>Add food menu item</h3>
+
+                <div class="form-row three-column">
+                    <div class="form-field">
+                        <label for="menuMeal">Meal</label>
+                        <select id="menuMeal" name="meal" required>
+                            <option th:each="meal : ${mealTypes}" th:value="${meal}" th:text="${meal}">Breakfast</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label for="menuName">Dish name</label>
+                        <input id="menuName" name="name" type="text" maxlength="120" required>
+                    </div>
+                    <div class="form-field">
+                        <label for="menuPrice">Price</label>
+                        <input id="menuPrice" name="price" type="number" min="1" required>
+                    </div>
+                </div>
+
+                <div class="form-field">
+                    <label for="menuDescription">Description</label>
+                    <input id="menuDescription" name="description" type="text" maxlength="500" required>
+                </div>
+
+                <div class="form-field">
+                    <label for="menuPhotoUrl">Photo URL</label>
+                    <input id="menuPhotoUrl" name="photoUrl" type="url" placeholder="https://example.com/food.jpg" maxlength="500" required>
+                </div>
+
+                <button type="submit">Save menu item</button>
+            </form>
+        </div>
+    </section>
+
+    <section class="booking-panel dashboard-section" aria-labelledby="booking-title">
+        <div>
+            <p class="eyebrow">Select Room</p>
+            <h2 id="booking-title">Choose room type and cooling</h2>
+            <p class="muted">Room price changes by category and AC or Non AC preference.</p>
+        </div>
+
+        <form class="room-selector" th:action="@{/dashboard}" method="get">
+            <div class="form-field">
+                <label for="roomType">Room category</label>
+                <select id="roomType" name="roomType">
+                    <option th:each="type : ${roomTypes}"
+                            th:value="${type}"
+                            th:text="${type}"
+                            th:selected="${type == selectedRoomType}"></option>
+                </select>
+            </div>
+
+            <div class="form-field">
+                <label for="cooling">Cooling</label>
+                <select id="cooling" name="cooling">
+                    <option th:each="option : ${coolingOptions}"
+                            th:value="${option}"
+                            th:text="${option}"
+                            th:selected="${option == selectedCooling}"></option>
+                </select>
+            </div>
+
+            <button type="submit">Check availability</button>
+        </form>
+    </section>
+
+    <section class="dashboard-section" aria-labelledby="matched-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Matching Rooms</p>
+                <h2 id="matched-title" th:text="${selectedRoomType + ' ' + selectedCooling + ' Rooms'}">Normal AC Rooms</h2>
+            </div>
+            <p class="muted" th:text="${#lists.size(matchingRooms) + ' matching rooms'}">0 matching rooms</p>
+        </div>
+
+        <div class="room-card-grid">
+            <article th:each="room : ${matchingRooms}" th:classappend="${room.available} ? ' available' : ' booked'">
+                <div>
+                    <span class="room-number" th:text="${room.number}">101</span>
+                    <span class="status-pill" th:text="${room.statusLabel()}">Available</span>
+                </div>
+                <h3 th:text="${room.type + ' Room'}">Normal Room</h3>
+                <p>
+                    <span th:text="'Floor ' + ${room.floor}">Floor 1</span>
+                    <span th:text="' | ' + ${room.coolingLabel()}"> | AC</span>
+                </p>
+                <strong th:text="'Rs. ' + ${room.price} + ' / night'">Rs. 1700 / night</strong>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-section" aria-labelledby="all-rooms-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">Room Availability</p>
+                <h2 id="all-rooms-title" th:text="${totalRooms + ' rooms in the building'}">20 rooms in the building</h2>
+            </div>
+            <p class="muted">Floors 1, 2 and 3</p>
+        </div>
+
+        <div class="availability-grid">
+            <article th:each="room : ${rooms}" th:classappend="${room.available} ? ' available' : ' booked'">
+                <span th:text="${room.number}">101</span>
+                <strong th:text="${room.statusLabel()}">Available</strong>
+                <small th:text="${room.type + ' | ' + room.coolingLabel() + ' | Rs. ' + room.price}">Normal | AC | Rs. 1700</small>
+            </article>
+        </div>
+    </section>
+
+    <section class="dashboard-section support-grid">
+        <div class="staff-panel" aria-labelledby="staff-title">
+            <div class="section-heading compact">
+                <div>
+                    <p class="eyebrow">Housekeeping</p>
+                    <h2 id="staff-title">Cleaning staff</h2>
+                </div>
+            </div>
+            <div class="staff-list">
+                <article th:each="staff : ${cleaningStaff}">
+                    <strong th:text="${staff.name}">Staff name</strong>
+                    <span th:text="${staff.area + ' | ' + staff.shift}">Floor 1 | Morning</span>
+                </article>
+            </div>
+        </div>
+
+        <div class="menu-panel" aria-labelledby="menu-title">
+            <div class="section-heading menu-heading">
+                <div>
+                    <p class="eyebrow">Restaurant</p>
+                    <h2 id="menu-title">Taj-inspired restaurant menu</h2>
+                    <p class="muted">A premium breakfast, lunch and dinner selection inspired by Taj all-day dining menus.</p>
+                </div>
+                <span class="menu-count" th:text="${#lists.size(foodMenu) + ' items'}">18 items</span>
+            </div>
+
+            <div class="meal-section">
+                <div class="meal-heading">
+                    <h3>Breakfast</h3>
+                    <span>7:00 AM - 10:30 AM</span>
+                </div>
+                <div class="menu-grid">
+                    <article th:each="item : ${breakfastMenu}">
+                        <img th:src="${item.photoUrl}" th:alt="${item.name}">
+                        <div>
+                            <strong th:text="${item.name}">Dish</strong>
+                            <p th:text="${item.description}">Description</p>
+                            <span th:text="'Rs. ' + ${item.price}">Rs. 120</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="meal-section">
+                <div class="meal-heading">
+                    <h3>Lunch</h3>
+                    <span>12:30 PM - 3:30 PM</span>
+                </div>
+                <div class="menu-grid">
+                    <article th:each="item : ${lunchMenu}">
+                        <img th:src="${item.photoUrl}" th:alt="${item.name}">
+                        <div>
+                            <strong th:text="${item.name}">Dish</strong>
+                            <p th:text="${item.description}">Description</p>
+                            <span th:text="'Rs. ' + ${item.price}">Rs. 220</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+
+            <div class="meal-section">
+                <div class="meal-heading">
+                    <h3>Dinner</h3>
+                    <span>7:00 PM - 10:30 PM</span>
+                </div>
+                <div class="menu-grid">
+                    <article th:each="item : ${dinnerMenu}">
+                        <img th:src="${item.photoUrl}" th:alt="${item.name}">
+                        <div>
+                            <strong th:text="${item.name}">Dish</strong>
+                            <p th:text="${item.description}">Description</p>
+                            <span th:text="'Rs. ' + ${item.price}">Rs. 240</span>
+                        </div>
+                    </article>
+                </div>
+            </div>
+        </div>
     </section>
 </main>
 </body>
